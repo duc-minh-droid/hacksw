@@ -1,0 +1,20 @@
+🔥 Introducing FireLine – where data visualization meets advanced machine learning to predict fire risk for your home! Our solution transforms raw fire data into actionable insights, keeping communities safer. #HackSW #DataViz
+
+
+📊 Our sleek, interactive front end brings fire data to life. With intuitive graphs and real-time maps, users can easily explore trends and understand local vulnerabilities. Safety starts with informed decisions!
+
+
+🤖 At the heart of our project is a powerful machine learning model. By analyzing historical fire data and key environmental factors, it predicts how vulnerable a house is to fire – offering tailored risk assessments for every user.
+
+
+🔗 Blockchain Integration on Solana – Securing Data Integrity:
+We leverage Solana’s high-speed blockchain to store fire data immutably. This means every data point and prediction is securely recorded and tamper-proof, ensuring trust and transparency.
+
+
+🔒 Blockchain Integration on Solana – Decentralized Verification:
+Our smart contracts on Solana not only authenticate data but also verify the outputs of our machine learning model. This decentralized verification process guarantees that risk predictions are both reliable and unbiased.
+
+
+💡 By merging cutting-edge data visualization, AI-driven risk assessments, and the robust security of Solana’s blockchain, FireLine is revolutionizing how we approach fire safety. It’s tech for a safer future!
+
+🚀 We’re excited to share our journey at #HackSW! Your feedback matters – what features or insights would you like to see next? Let’s build safer communities together. #Solana #MachineLearning #Blockchain
