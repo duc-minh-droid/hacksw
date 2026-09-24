@@ -107,6 +107,19 @@ TEMPLATES = {
     15:[(-2.0, 0.0), (-1.0, 1.0), (0.0, -1.0), (1.0, 1.0), (2.0, 0.0), (1.0, -1.0), (0.0, 1.0), (-1.0, -1.0), (-2.0, 0.0)]
 }
 
+# Direction (degrees, counter-clockwise from east) that each template's tail points.
+# Templates 1-9 have a tail over an angle range; 11-14 are elongated along the x axis.
+TAIL_ANGLES = {1: 90, 2: 60, 3: 110, 4: 80, 5: 100, 6: 70, 7: 120, 8: 50, 9: 130,
+               11: 0, 12: 0, 13: 90, 14: 0, 15: 0}
+# Template 15 self-intersects (it is a star outline), which breaks centroid/scaling, so it is not drawn.
+SHAPE_IDS = [k for k in TEMPLATES if k != 15]
+
+
+def downwind_bearing(wind_from_degrees):
+    """Weather APIs report where the wind comes FROM; fire spreads the other way."""
+    return (wind_from_degrees + 180) % 360
+
+
 def generate_geojson_polygon(center, scale_factor, tail_direction_degrees):
     """
     Generate a GeoJSON Feature for a polygon that has been scaled, rotated, 
@@ -122,7 +135,8 @@ def generate_geojson_polygon(center, scale_factor, tail_direction_degrees):
         - A dictionary in GeoJSON Feature format.
     """
     # Pick a random shape from our templates.
-    shape_id = random.randint(1, len(TEMPLATES))
+    # (randint(1, len(TEMPLATES)) could return 10, which has no template.)
+    shape_id = random.choice(SHAPE_IDS)
     template = TEMPLATES.get(shape_id)
     if template is None:
         raise ValueError(f"Shape id {shape_id} is not defined.")
@@ -131,7 +145,10 @@ def generate_geojson_polygon(center, scale_factor, tail_direction_degrees):
     # Scale the polygon (centered at (0, 0)).
     poly_scaled = scale(poly, xfact=scale_factor, yfact=scale_factor, origin=(0, 0))
     # Rotate the polygon.
-    poly_rotated = rotate(poly_scaled, tail_direction_degrees, origin=(0, 0), use_radians=False)
+    # tail_direction_degrees is a compass bearing (0 = north, clockwise). Shapely rotates
+    # counter-clockwise from east, and each template's tail points a different way.
+    math_angle = 90 - tail_direction_degrees
+    poly_rotated = rotate(poly_scaled, math_angle - TAIL_ANGLES[shape_id], origin=(0, 0), use_radians=False)
     # Translate the polygon.
     poly_translated = translate(poly_rotated, xoff=center[1], yoff=center[0])
     geometry = mapping(poly_translated)
@@ -160,7 +177,7 @@ def generate_nested_geojson_polygons(center, scale_factor, tail_direction_degree
     Returns:
         - A list of GeoJSON Feature dictionaries representing the nested polygons.
     """
-    scale_factor =+ random.uniform(0.005, 0.03)
+    scale_factor += random.uniform(0.005, 0.03)  # was `=+`, which threw the weather-based factor away
     # Generate the outer polygon.
     outer_feature = generate_geojson_polygon(center, scale_factor, tail_direction_degrees)
     # Convert GeoJSON geometry back to a shapely geometry.

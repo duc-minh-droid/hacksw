@@ -2,13 +2,14 @@
 Mapping for the data
 '''
 mappings = {
+    # Labels as they appear in cleaned_dataset.csv, in the order the notebook encoded them
     'damage': {
-        0: 'Minimal Damage (<1%)',
-        1: 'Noticeable Damange (1-9%)',
-        2: 'Minor Damange (10-25%)',
+        0: 'No Damage',
+        1: 'Affected (1-9%)',
+        2: 'Minor (10-25%)',
         3: 'Destroyed (>50%)',
-        4: 'Majorly Destroyed (26-50%)',
-        5: 'Totally Destroyed'
+        4: 'Major (26-50%)',
+        5: 'Inaccessible'
     },
     'street_type': {
         0: 'Road',
@@ -29,16 +30,16 @@ mappings = {
         15: 'Circle',
         16: 'Boulevard',
         17: 'Parkway',
-        19: ' ',
-        20: 'Hwy',
-        21: 'Dirt road',
-        22: '-',
-        23: 'not given',
-        24: 'Grade',
-        25: 'Ext.',
-        26: 'not noted',
-        27: 'Unk',
-        28: 'Pass'
+        18: ' ',
+        19: 'Hwy',
+        20: 'Dirt road',
+        21: '-',
+        22: 'not given',
+        23: 'Grade',
+        24: 'Ext.',
+        25: 'not noted',
+        26: 'Unk',
+        27: 'Pass'
     },
     'fire_unit': {
         0: 'LNU',

@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+numpy
+h5py
+shapely
+requests
+pydantic

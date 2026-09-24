@@ -1,83 +1,85 @@
-''''''
-from fastapi import FastAPI
+'''
+FireLine API
+
+    uvicorn backend.main:app --port 8119      (run from the repo root)
+'''
+import os
+
 import numpy as np
-from backend.mapping import mappings
-from backend.input_class import BurnInput
-from backend.burn_simulator_service import generate_nested_geojson_polygons
-from backend.weather_service import get_weather, get_scale_factor
-from tensorflow.keras.models import load_model
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-app = FastAPI()
+from backend.mapping import mappings
+from backend.input_class import BurnInput
+from backend.burn_model import BurnModel
+from backend.burn_simulator_service import generate_nested_geojson_polygons, downwind_bearing
+from backend.weather_service import get_weather, get_scale_factor
+
+app = FastAPI(title="FireLine API")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allows all domains (change this to ["http://localhost:5173"] for security)
+    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
     allow_credentials=True,
-    allow_methods=["*"],  # Allows all HTTP methods
-    allow_headers=["*"],  # Allows all headers
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
-model = load_model('sequential-model-2.h5')
+# NumPy re-implementation of sequential-model-2.h5 (no TensorFlow needed), see burn_model.py
+model = BurnModel()
+
+FEATURES = ['street_type', 'fire_unit', 'structure_type', 'structure_category', 'roof_material', 'eaves',
+            'exterior_siding', 'window_pane', 'attached_patio_material', 'attached_fence_material']
+reversed_mappings = {k: {v: k for k, v in v.items()} for k, v in mappings.items()}
+
+
+@app.get("/api/health")
+def health():
+    return {"ok": True}
+
+
+def _simulate(latitude: float, longitude: float):
+    weather_data = get_weather(latitude, longitude)
+    scale_factor = get_scale_factor(weather_data)
+    bearing = downwind_bearing(float(weather_data['wind_direction']))
+    rings = generate_nested_geojson_polygons((latitude, longitude), scale_factor, bearing)
+    return weather_data, scale_factor, rings
+
+
+@app.get("/api/simulate")
+def simulate(latitude: float, longitude: float):
+    '''
+    Simulate a fire started at (latitude, longitude).
+
+    returns: the weather used, the scale factor, and 5 nested GeoJSON polygons (smallest first)
+    '''
+    weather_data, scale_factor, rings = _simulate(latitude, longitude)
+    return {"weather": weather_data, "scale_factor": scale_factor, "rings": rings}
+
 
 @app.get("/api/simulatePoints")
-async def  simulate_points(latitude: float, longitude: float):
-    '''
-    Simulate the points based on the given latitude and longitude
-
-    params
-    - latitude: Latitude of the point
-    - longitude: Longitude of the point
-
-    returns [geojson] : The simulated simulated 7 circles
-    '''
-    # Get weather api data
+def simulate_points(latitude: float, longitude: float):
+    '''Original hackathon endpoint: just the list of nested polygons.'''
     try:
-        weather_data = get_weather(latitude, longitude)
-
-        scale_factor:int = get_scale_factor(weather_data)
-
-        direction:int = int(weather_data['wind_direction'])
-
-        geojson =  generate_nested_geojson_polygons((latitude, longitude), scale_factor, direction)
-        return geojson
+        return _simulate(latitude, longitude)[2]
     except Exception as e:
         return {"error": f"An error occurred: {e}"}
+
 
 @app.post("/api/calculateBurn")
 def calculate_burn(input_data: BurnInput):
     """
     Predict the burn classification (damage) based on the input data.
     """
-
-    reversed_mappings = {k: {v: k for k, v in v.items()} for k, v in mappings.items()}
-
-    # Encode the input data
     try:
-        encoded_input = [
-            reversed_mappings['street_type'][input_data.street_type],
-            reversed_mappings['fire_unit'][input_data.fire_unit],
-            reversed_mappings['structure_type'][input_data.structure_type],
-            reversed_mappings['structure_category'][input_data.structure_category],
-            reversed_mappings['roof_material'][input_data.roof_material],
-            reversed_mappings['eaves'][input_data.eaves],
-            reversed_mappings['exterior_siding'][input_data.exterior_siding],
-            reversed_mappings['window_pane'][input_data.window_pane],
-            reversed_mappings['attached_patio_material'][input_data.attached_patio_material],
-            reversed_mappings['attached_fence_material'][input_data.attached_fence_material],
-            input_data.age,
-        ]
-
-        # Convert input to a NumPy array and reshape for model prediction
-        encoded_input = np.array(encoded_input).reshape(1, -1)
-
-        # Predict with the model
-        prediction = model.predict(encoded_input)
-        predicted_class = prediction.argmax(axis=1)[0]
-
-        # Decode the prediction to a readable class
-        damage_mapping = {v: k for k, v in reversed_mappings['damage'].items()}
-        predicted_label = damage_mapping[predicted_class]
-
-        # Return the result
-        return {"predicted_damage": predicted_label, "probabilities": prediction.tolist()}
+        encoded_input = [reversed_mappings[name][getattr(input_data, name)] for name in FEATURES]
+        encoded_input.append(input_data.age)
     except KeyError as e:
         return {"error": f"Invalid input value: {e}"}
+
+    prediction = model.predict(np.array(encoded_input, dtype=float).reshape(1, -1))
+    predicted_class = int(prediction.argmax(axis=1)[0])
+    labels = [mappings['damage'][i] for i in range(len(mappings['damage']))]
+    return {
+        "predicted_damage": labels[predicted_class],
+        "probabilities": prediction.tolist(),
+        "labels": labels,
+    }
