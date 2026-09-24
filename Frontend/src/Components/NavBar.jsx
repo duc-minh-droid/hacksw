@@ -1,47 +1,71 @@
-import React, { useState } from "react";
-import { FaFireAlt, FaSearch, FaLayerGroup } from "react-icons/fa";
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { FaFireAlt, FaTrashAlt } from "react-icons/fa";
 import { FaHouseFire, FaBuildingCircleExclamation } from "react-icons/fa6";
 import FormModal from "./FormModal";
-import { Tooltip } from "react-tooltip";
 
+function ToolButton({ active, onClick, icon, label, activeClass, id }) {
+  return (
+    <motion.button
+      id={id}
+      whileHover={{ y: -1 }}
+      whileTap={{ scale: 0.96 }}
+      onClick={onClick}
+      className={`relative flex items-center gap-2 rounded-xl px-3.5 py-2 text-sm font-medium transition cursor-pointer ${
+        active ? activeClass : "text-white/80 hover:text-white hover:bg-white/10"
+      }`}
+    >
+      {icon}
+      <span>{label}</span>
+    </motion.button>
+  );
+}
 
-function NavBar({ setAddFireMode, addFireMode, setShowHouses }) {
+function NavBar({ setAddFireMode, addFireMode, showHouses, setShowHouses, hasSimulations, clearSimulations }) {
   const [openModal, setOpenModal] = useState(false);
 
   return (
-    <div className="flex gap-4 z-50 pointer-events-auto">
-      <button
-        data-tooltip-id="addFire"
+    <motion.div
+      initial={{ opacity: 0, y: -16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.15 }}
+      className="glass rounded-2xl p-1.5 flex gap-1 pointer-events-auto"
+    >
+      <ToolButton
+        id="tool-fire"
+        active={addFireMode}
         onClick={() => setAddFireMode(!addFireMode)}
-        className={`flex items-center justify-center w-14 h-14 ${addFireMode ? 'bg-[#c82821] border-3 border-white' : 'bg-[#F95952]'
-          } text-white rounded-full shadow-lg hover:bg-[#c82821] transition hover:cursor-pointer drop-shadow-4xl`}>
-        <FaFireAlt size={24} />
-      </button>
-      <Tooltip id="addFire" effect="solid" place="bottom" content="Simulate Fire Spread" />
-
-      {/* Marker Icon (Opens Modal) */}
-
-      <button
-        data-tooltip-id="willBurn"
+        icon={<FaFireAlt size={15} className={addFireMode ? "" : "text-orange-400"} />}
+        label="Simulate fire"
+        activeClass="bg-gradient-to-br from-orange-500 to-red-600 text-white shadow-[0_0_24px_rgba(255,110,50,0.55)]"
+      />
+      <ToolButton
+        id="tool-house"
+        active={openModal}
         onClick={() => setOpenModal(true)}
-        className="flex items-center justify-center w-14 h-14 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-600 transition hover:cursor-pointer drop-shadow-4xl"
-      >
-        <FaHouseFire size={24} />
-      </button>
-      <Tooltip id="willBurn" effect="solid" place="bottom" content="How Will My House Burn?" />
-
-      {/* Search Icon */}
-      <button
-        data-tooltip-id="addHouses"
-
-        onClick={() => setShowHouses(prev => !prev)}
-        className="flex items-center justify-center w-14 h-14 bg-[#e4b90c] text-white rounded-full shadow-lg hover:bg-[#F5890A] transition hover:cursor-pointer drop-shadow-4xl">
-        <FaBuildingCircleExclamation size={24} />
-      </button>
-      <Tooltip id="addHouses" effect="solid" place="bottom" content="Toggle Structure Damage" />
-      {/* 🔥 Modal */}
+        icon={<FaHouseFire size={15} className="text-amber-300" />}
+        label="Will my house burn?"
+        activeClass="bg-white/15 text-white"
+      />
+      <ToolButton
+        id="tool-structures"
+        active={showHouses}
+        onClick={() => setShowHouses((prev) => !prev)}
+        icon={<FaBuildingCircleExclamation size={15} className={showHouses ? "" : "text-sky-300"} />}
+        label="Damaged structures"
+        activeClass="bg-gradient-to-br from-sky-500 to-blue-600 text-white shadow-[0_0_24px_rgba(56,189,248,0.5)]"
+      />
+      {hasSimulations && (
+        <ToolButton
+          id="tool-clear"
+          onClick={clearSimulations}
+          icon={<FaTrashAlt size={13} />}
+          label="Clear"
+          activeClass=""
+        />
+      )}
       <FormModal open={openModal} handleClose={() => setOpenModal(false)} />
-    </div>
+    </motion.div>
   );
 }
 

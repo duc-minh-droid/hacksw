@@ -1,266 +1,209 @@
-import React, { useState } from "react";
-import axios from "axios";
+import { useEffect, useState } from "react";
 import Modal from "@mui/material/Modal";
-import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
-import MenuItem from "@mui/material/MenuItem";
-import Select from "@mui/material/Select";
-import InputLabel from "@mui/material/InputLabel";
-import FormControl from "@mui/material/FormControl";
-import Typography from "@mui/material/Typography";
-import TextField from "@mui/material/TextField";
-import { ToastContainer, toast } from 'react-toastify';
+import { motion } from "framer-motion";
+import { predictBurn } from "../lib/api";
+import { preloadModel } from "../lib/burnModel";
 
-const style = {
-  position: "absolute",
-  top: "50%",
-  left: "50%",
-  transform: "translate(-50%, -50%)",
-  width: 400,
-  bgcolor: "background.paper",
-  borderRadius: 2,
-  boxShadow: 24,
-  p: 4,
-  maxHeight: "80vh",
-  overflowY: "auto",
-};
-
-// All the question options (mappings for each field)
+// Answer options per field. Labels must match backend/mapping.py (the encoding the model was trained with).
 const options = {
-  street_type: {
-    0: "Road",
-    1: "Lane",
-    2: "Other",
-    3: "Trail",
-    4: "Drive",
-    5: "Street",
-    6: "None",
-    7: "Way",
-    8: "Avenue",
-    9: "Court",
-    10: "Loop",
-    11: "Route",
-    12: "Place",
-    13: "Alley",
-    14: "Terrace",
-    15: "Circle",
-    16: "Boulevard",
-    17: "Parkway",
-    19: " ",
-    20: "Hwy",
-    21: "Dirt road",
-    22: "-",
-    23: "not given",
-    24: "Grade",
-    25: "Ext.",
-    26: "not noted",
-    27: "Unk",
-    28: "Pass",
+  structure_type: [
+    "Single Family Residence Single Story", "Single Family Residence Multi Story", "Multi Family Residence Single Story",
+    "Multi Family Residence Multi Story", "Mobile Home Single Wide", "Mobile Home Double Wide", "Mobile Home Triple Wide",
+    "Motor Home", "Mixed Commercial/Residential", "Commercial Building Single Story", "Commercial Building Multi Story",
+    "Utility Misc Structure", "Infrastructure", "School", "Church", "Hospital", "Agriculture",
+  ],
+  structure_category: [
+    "Single Residence", "Multiple Residence", "Mixed Commercial/Residential", "Nonresidential Commercial",
+    "Other Minor Structure", "Infrastructure", "Agriculture",
+  ],
+  roof_material: ["Asphalt", "Tile", "Metal", "Concrete", "Wood", "Combustible", "Fire Resistant", "Other", "Unknown"],
+  exterior_siding: ["Wood", "Stucco Brick Cement", "Metal", "Vinyl", "Ignition Resistant", "Combustible", "Fire Resistant", "Other", "Unknown"],
+  eaves: ["Unenclosed", "Enclosed", "No Eaves", "Not Applicable", "Unknown"],
+  window_pane: ["Single Pane", "Multi Pane", "No Windows", "Radiant Heat", "Unknown"],
+  attached_patio_material: ["No Patio Cover/Carport", "Combustible", "Non Combustible", "Unknown"],
+  attached_fence_material: ["No Fence", "Combustible", "Non Combustible", "Unknown"],
+  street_type: [
+    "Road", "Street", "Drive", "Lane", "Avenue", "Way", "Court", "Place", "Circle", "Boulevard", "Parkway", "Loop",
+    "Trail", "Terrace", "Alley", "Route", "Hwy", "Grade", "Pass", "Dirt road", "Other",
+  ],
+  fire_unit: [
+    "LNU", "AEU", "BTU", "SLU", "SKU", "SCU", "BEU", "LMU", "RRU", "BDU", "KRN", "NEU", "SHU", "TGU", "LAC", "MEU", "MVU",
+    "HUU", "TUU", "FKU", "MMU", "CZU", "ORC", "VNC", "TCU", "SBC", "SDU",
+  ],
+};
+
+const LABELS = {
+  structure_type: "Structure type",
+  structure_category: "Category",
+  roof_material: "Roof",
+  exterior_siding: "Exterior siding",
+  eaves: "Eaves",
+  window_pane: "Windows",
+  attached_patio_material: "Patio / carport",
+  attached_fence_material: "Attached fence",
+  street_type: "Street type",
+  fire_unit: "CAL FIRE unit",
+};
+
+const PRESETS = {
+  "Old wooden cabin": {
+    structure_type: "Single Family Residence Single Story", structure_category: "Single Residence", roof_material: "Wood",
+    exterior_siding: "Combustible", eaves: "Unenclosed", window_pane: "Single Pane", attached_patio_material: "Combustible",
+    attached_fence_material: "Combustible", street_type: "Road", fire_unit: "BTU", age: "65",
   },
-  fire_unit: {
-    0: "LNU",
-    1: "AEU",
-    2: "BTU",
-    3: "SLU",
-    4: "SKU",
-    5: "SCU",
-    6: "BEU",
-    7: "LMU",
-    8: "RRU",
-    9: "BDU",
-    10: "KRN",
-    11: "NEU",
-    12: "SHU",
-    13: "TGU",
-    14: "LAC",
-    15: "MEU",
-    16: "MVU",
-    17: "HUU",
-    18: "TUU",
-    19: "FKU",
-    20: "MMU",
-    21: "CZU",
-    22: "ORC",
-    23: "VNC",
-    24: "TCU",
-    25: "SBC",
-    26: "SDU",
-  },
-  structure_type: {
-    0: "Single Family Residence Multi Story",
-    1: "Single Family Residence Single Story",
-    2: "Utility Misc Structure",
-    3: "Mobile Home Double Wide",
-    4: "Motor Home",
-    5: "Multi Family Residence Multi Story",
-    6: "Commercial Building Single Story",
-    7: "Mobile Home Single Wide",
-    8: "Mixed Commercial/Residential",
-    9: "Mobile Home Triple Wide",
-    10: "Infrastructure",
-    11: "School",
-    12: "Multi Family Residence Single Story",
-    13: "Commercial Building Multi Story",
-    14: "Church",
-    15: "Hospital",
-    16: "Agriculture",
-    17: "Single Famliy Residence Single Story",
-    18: "Utility or Miscellaneous Structure > 120 sqft",
-  },
-  structure_category: {
-    0: "Single Residence",
-    1: "Other Minor Structure",
-    2: "Multiple Residence",
-    3: "Nonresidential Commercial",
-    4: "Mixed Commercial/Residential",
-    5: "Infrastructure",
-    6: "Agriculture",
-  },
-  roof_material: {
-    0: "Asphalt",
-    1: "Tile",
-    2: "Unknown",
-    3: "Metal",
-    4: "Concrete",
-    5: "Other",
-    6: "Wood",
-    7: " ",
-    8: "Combustible",
-    9: "Fire Resistant",
-    11: "No Deck/Porch",
-  },
-  eaves: {
-    0: "Unenclosed",
-    1: "Enclosed",
-    2: "Unknown",
-    3: "No Eaves",
-    4: " ",
-    5: "Not Applicable",
-  },
-  exterior_siding: {
-    0: "Wood",
-    1: "Stucco Brick Cement",
-    2: "Unknown",
-    3: "Metal",
-    4: "Other",
-    5: "Vinyl",
-    6: "Ignition Resistant",
-    7: "Combustible",
-    8: " ",
-    9: "Fire Resistant",
-    11: "Stucco/Brick/Cement",
-  },
-  window_pane: {
-    0: "Single Pane",
-    1: "Multi Pane",
-    2: "Unknown",
-    3: "No Windows",
-    4: " ",
-    6: "No Deck/Porch",
-    7: "Radiant Heat",
-  },
-  attached_patio_material: {
-    0: "No Patio Cover/Carport",
-    1: "Combustible",
-    2: "Unknown",
-    3: "Non Combustible",
-    4: " ",
-  },
-  attached_fence_material: {
-    0: "No Fence",
-    1: "Combustible",
-    2: "Unknown",
-    3: "Non Combustible",
+  "Hardened new build": {
+    structure_type: "Single Family Residence Multi Story", structure_category: "Single Residence", roof_material: "Tile",
+    exterior_siding: "Stucco Brick Cement", eaves: "Enclosed", window_pane: "Multi Pane", attached_patio_material: "Non Combustible",
+    attached_fence_material: "No Fence", street_type: "Court", fire_unit: "LAC", age: "3",
   },
 };
+
+const DAMAGE_COLORS = {
+  "No Damage": "#34d399",
+  "Affected (1-9%)": "#a3e635",
+  "Minor (10-25%)": "#facc15",
+  "Major (26-50%)": "#fb923c",
+  "Destroyed (>50%)": "#ef4444",
+  Inaccessible: "#94a3b8",
+};
+
+const emptyForm = Object.keys(options).reduce((acc, key) => ({ ...acc, [key]: "" }), { age: "" });
 
 function FormModal({ open, handleClose }) {
-  // Build initial state with each option field set to an empty string and include "age"
-  const initialFormState = Object.keys(options).reduce(
-    (acc, key) => ({ ...acc, [key]: "" }),
-    { age: "" }
-  );
+  const [formData, setFormData] = useState(emptyForm);
+  const [result, setResult] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
 
-  const [formData, setFormData] = useState(initialFormState);
-  const [responseMessage, setResponseMessage] = useState("");
-  const [responseModalOpen, setResponseModalOpen] = useState(false);
+  useEffect(() => {
+    if (open) preloadModel();
+  }, [open]);
+
+  const complete = Object.values(formData).every((v) => v !== "");
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    // For the age field, allow only digits (positive numbers)
-    if (name === "age" && !/^\d*$/.test(value)) {
-      return;
-    }
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    if (name === "age" && !/^\d*$/.test(value)) return;
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async () => {
+    setBusy(true);
+    setError("");
     try {
-      // Send the form data as JSON to your endpoint
-      const response = await axios.post(
-        "http://127.0.0.1:8000/api/calculateBurn",
-        JSON.stringify(formData),
-        { headers: { "Content-Type": "application/json" } }
-      );
-      toast.success(`Predicted Damage: ${response.data.predicted_damage}`, {
-        position: "top-right",
-        autoClose: 5000, // Auto close after 5 seconds
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
+      const res = await predictBurn(formData);
+      const probs = res.probabilities[0];
+      setResult({
+        ...res,
+        ranked: res.labels.map((label, i) => ({ label, p: probs[i] })).sort((a, b) => b.p - a.p),
       });
-      setResponseMessage(response.data.damage);
-      console.log("Server Response:", response.data);
-      // Clear the form after successful submission
-      setFormData(initialFormState);
-      // Optionally, close the modal
-      handleClose();
-    } catch (error) {
-      console.error("Error sending data:", error);
+    } catch (e) {
+      setError(`Prediction failed: ${e.message}`);
+    } finally {
+      setBusy(false);
     }
   };
 
+  const close = () => {
+    handleClose();
+    setTimeout(() => setResult(null), 300);
+  };
+
   return (
-    <Modal open={open} onClose={handleClose} aria-labelledby="form-modal">
-      <Box sx={style}>
-        <Button sx={{color: "red"}}>Will My House Burn?</Button>
+    <Modal open={open} onClose={close} aria-labelledby="form-modal">
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 glass-strong rounded-2xl w-[620px] max-h-[88vh] overflow-y-auto text-white outline-none">
+        <div className="px-6 pt-5 pb-3 border-b border-white/10 flex items-start justify-between">
+          <div>
+            <h2 id="form-modal" className="font-display text-xl">Will my house burn?</h2>
+            <p className="text-xs text-white/55 mt-0.5">
+              Predicted damage if a wildfire reaches the building, from a model trained on ~100k CAL FIRE inspections.
+            </p>
+          </div>
+          <button onClick={close} className="text-white/50 hover:text-white text-xl leading-none cursor-pointer">×</button>
+        </div>
 
-        {/* Age Input Field */}
-        <TextField
-          label="Age"
-          type="number"
-          name="age"
-          value={formData.age}
-          onChange={handleChange}
-          fullWidth
-          margin="normal"
-          inputProps={{ min: "1" }} // Only allow positive numbers
-        />
+        {!result ? (
+            <motion.div key="form" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="px-6 py-4">
+              <div className="flex items-center gap-2 mb-3 text-xs">
+                <span className="text-white/45">Try:</span>
+                {Object.keys(PRESETS).map((name) => (
+                  <button
+                    key={name}
+                    data-preset={name}
+                    onClick={() => setFormData(PRESETS[name])}
+                    className="rounded-full border border-white/15 px-2.5 py-1 hover:bg-white/10 cursor-pointer"
+                  >
+                    {name}
+                  </button>
+                ))}
+              </div>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                {Object.entries(options).map(([key, values]) => (
+                  <label key={key} className="flex flex-col gap-1">
+                    <span className="text-[10px] uppercase tracking-wider text-white/50">{LABELS[key]}</span>
+                    <select name={key} value={formData[key]} onChange={handleChange} className="field">
+                      <option value="" disabled>Select…</option>
+                      {values.map((label) => (
+                        <option key={label} value={label}>{label}</option>
+                      ))}
+                    </select>
+                  </label>
+                ))}
+                <label className="flex flex-col gap-1">
+                  <span className="text-[10px] uppercase tracking-wider text-white/50">Building age (years)</span>
+                  <input name="age" value={formData.age} onChange={handleChange} inputMode="numeric" placeholder="e.g. 30" className="field" />
+                </label>
+              </div>
+              {error && <p className="mt-3 text-xs text-red-300">{error}</p>}
+              <button
+                id="predict-button"
+                disabled={!complete || busy}
+                onClick={handleSubmit}
+                className="mt-5 w-full rounded-xl py-2.5 font-medium bg-gradient-to-r from-orange-500 to-red-600 disabled:opacity-40 disabled:cursor-not-allowed hover:brightness-110 transition cursor-pointer shadow-[0_0_24px_rgba(255,110,50,0.35)]"
+              >
+                {busy ? "Running model…" : "Predict damage"}
+              </button>
+            </motion.div>
+          ) : (
+            <motion.div key="result" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="px-6 py-5">
+              <div className="text-[10px] uppercase tracking-wider text-white/45">Most likely outcome</div>
+              <div className="font-display text-3xl mt-1" style={{ color: DAMAGE_COLORS[result.predicted_damage] }}>
+                {result.predicted_damage}
+              </div>
+              <div className="text-sm text-white/60">{(result.ranked[0].p * 100).toFixed(1)}% confidence</div>
 
-        {/* Render a dropdown for each field in the options object */}
-        {Object.entries(options).map(([key, values]) => (
-          <FormControl fullWidth sx={{ mb: 2 }} key={key}>
-            <InputLabel>{key.replace("_", " ").toUpperCase()}</InputLabel>
-            <Select name={key} value={formData[key]} onChange={handleChange}>
-              {Object.entries(values).map(([value, label]) => (
-                <MenuItem key={value} value={label}>
-                  {label}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        ))}
+              <div className="mt-5 space-y-2.5">
+                {result.ranked.map(({ label, p }, i) => (
+                  <div key={label} className="flex items-center gap-3 text-sm">
+                    <span className="w-36 text-white/75">{label}</span>
+                    <div className="flex-1 h-2.5 rounded-full bg-white/5 overflow-hidden">
+                      <motion.div
+                        className="h-full rounded-full"
+                        style={{ background: DAMAGE_COLORS[label] }}
+                        initial={{ width: 0 }}
+                        animate={{ width: `${Math.max(0.5, p * 100)}%` }}
+                        transition={{ duration: 0.8, delay: 0.1 + i * 0.08, ease: "easeOut" }}
+                      />
+                    </div>
+                    <span className="w-14 text-right tabular-nums text-white/70">{(p * 100).toFixed(1)}%</span>
+                  </div>
+                ))}
+              </div>
 
-        <Button variant="contained" color="primary" fullWidth onClick={handleSubmit}>
-          Submit
-        </Button>
-
-        
-      </Box>
+              <p className="mt-5 text-[11px] text-white/40">
+                Model: 5 dense layers, 84.6% accuracy on a held-out 20% split.{" "}
+                {result.engine === "api" ? "Served by the FastAPI backend." : "Running in your browser (no backend)."}{" "}
+                It only knows construction details, not vegetation, slope or distance to the fire.
+              </p>
+              <div className="mt-4 flex gap-2">
+                <button onClick={() => setResult(null)} className="rounded-xl border border-white/15 px-4 py-2 text-sm hover:bg-white/10 cursor-pointer">
+                  Edit answers
+                </button>
+                <button onClick={close} className="rounded-xl px-4 py-2 text-sm text-white/60 hover:text-white cursor-pointer">Close</button>
+              </div>
+            </motion.div>
+          )}
+      </div>
     </Modal>
   );
 }

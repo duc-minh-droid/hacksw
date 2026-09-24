@@ -22,4 +22,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-data/final_fires.json
+
+.env
+.env.*
+!.env.example
+.vercel

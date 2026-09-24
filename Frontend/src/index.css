@@ -1,19 +1,65 @@
 @import "tailwindcss";
-@tailwind utilities;
 
+@theme {
+  --font-display: "Space Grotesk", Inter, system-ui, sans-serif;
+}
 
 :root {
-  height: 100vh !important;
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-
-  color-scheme: light dark;
+  color-scheme: dark;
   color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
+  background-color: #0b0f14;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  background: #0b0f14;
+}
+
+.glass {
+  background: linear-gradient(160deg, rgba(28, 22, 20, 0.78), rgba(12, 14, 18, 0.72));
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.glass-strong {
+  background: linear-gradient(160deg, rgba(30, 22, 20, 0.96), rgba(14, 15, 19, 0.96));
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+}
+
+.field {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 0.6rem;
+  padding: 0.45rem 0.6rem;
+  font-size: 0.85rem;
+  color: #fff;
+  outline: none;
+  transition: border-color 0.15s, background 0.15s;
+}
+.field:focus {
+  border-color: #ff7a3d;
+  background: rgba(255, 122, 61, 0.08);
+}
+.field option {
+  background: #1a1412;
+}
+
+@keyframes flicker {
+  0%, 100% { transform: scale(1) rotate(0deg); filter: drop-shadow(0 0 6px rgba(255, 120, 40, 0.6)); }
+  30% { transform: scale(1.04, 0.97) rotate(-2deg); }
+  60% { transform: scale(0.97, 1.04) rotate(2deg); filter: drop-shadow(0 0 12px rgba(255, 170, 60, 0.8)); }
+}
+.flicker {
+  animation: flicker 1.6s ease-in-out infinite;
+  transform-origin: 50% 90%;
 }
