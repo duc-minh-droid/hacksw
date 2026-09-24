@@ -1,3 +1,25 @@
+# Python
+__pycache__/
+*.pyc
+venv/
+.venv/
+.ipynb_checkpoints/
+.cache.sqlite
+
+# Node / Vite
+node_modules/
+Frontend/node_modules/
+dist/
+.vite/
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Vercel
+.vercel/
+
+# Raw downloads (rebuild with Frontend/data/build_data.py)
 California_Fire_Perimeters_(all).geojson
-venv
-Frontend/node_modules
+docs/media/_tmp/

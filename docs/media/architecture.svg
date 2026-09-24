@@ -1,0 +1,99 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 560" width="1000" height="560" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#ffb347"/>
+    </marker>
+    <marker id="b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#7dd3fc"/>
+    </marker>
+    <filter id="rough"><feTurbulence baseFrequency="0.02" numOctaves="2" seed="4"/><feDisplacementMap in="SourceGraphic" scale="2.5"/></filter>
+  </defs>
+  <rect width="1000" height="560" rx="18" fill="#14100f"/>
+  <text x="32" y="44" fill="#fff" font-size="22" font-weight="600">FireLine: how the pieces fit</text>
+  <text x="32" y="68" fill="#a8a29e" font-size="13">Offline build steps on the left, the app on the right. The frontend works with or without the backend.</text>
+
+  <!-- column labels -->
+  <text x="32" y="104" fill="#78716c" font-size="11" letter-spacing="2">DATA</text>
+  <text x="300" y="104" fill="#78716c" font-size="11" letter-spacing="2">BUILD (ONCE)</text>
+  <text x="600" y="104" fill="#78716c" font-size="11" letter-spacing="2">RUNTIME</text>
+
+  <g filter="url(#rough)" fill="none" stroke-width="2">
+    <!-- data -->
+    <rect x="32" y="118" width="220" height="74" rx="10" stroke="#ff7a3d"/>
+    <rect x="32" y="212" width="220" height="74" rx="10" stroke="#7dd3fc"/>
+    <rect x="32" y="306" width="220" height="74" rx="10" stroke="#fde68a"/>
+    <!-- build -->
+    <rect x="300" y="118" width="250" height="74" rx="10" stroke="#ff7a3d"/>
+    <rect x="300" y="212" width="250" height="74" rx="10" stroke="#7dd3fc"/>
+    <rect x="300" y="306" width="250" height="74" rx="10" stroke="#7dd3fc"/>
+    <!-- runtime -->
+    <rect x="600" y="118" width="368" height="170" rx="12" stroke="#ffb347"/>
+    <rect x="600" y="330" width="170" height="200" rx="12" stroke="#a3e635" stroke-dasharray="7 5"/>
+    <rect x="798" y="330" width="170" height="200" rx="12" stroke="#fda4af"/>
+  </g>
+
+  <!-- data text -->
+  <text x="46" y="146" fill="#fff" font-size="14" font-weight="600">CAL FIRE fire perimeters</text>
+  <text x="46" y="166" fill="#a8a29e" font-size="12">data.ca.gov ArcGIS layer</text>
+  <text x="46" y="182" fill="#a8a29e" font-size="12">every mapped fire since 1878</text>
+  <text x="46" y="240" fill="#fff" font-size="14" font-weight="600">DINS damage inspections</text>
+  <text x="46" y="260" fill="#a8a29e" font-size="12">100,230 buildings, 2013-2024</text>
+  <text x="46" y="276" fill="#a8a29e" font-size="12">materials, age, damage level</text>
+  <text x="46" y="334" fill="#fff" font-size="14" font-weight="600">Weather</text>
+  <text x="46" y="354" fill="#a8a29e" font-size="12">Open-Meteo (no key), or</text>
+  <text x="46" y="370" fill="#a8a29e" font-size="12">OpenWeatherMap if key set</text>
+
+  <!-- build text -->
+  <text x="314" y="146" fill="#fff" font-size="14" font-weight="600">build_data.py</text>
+  <text x="314" y="166" fill="#a8a29e" font-size="12">area &gt; 2.5 km², 1950+, simplified</text>
+  <text x="314" y="182" fill="#fdba74" font-size="12">public/data/fires.geojson (2.4 MB)</text>
+  <text x="314" y="240" fill="#fff" font-size="14" font-weight="600">model2.ipynb (Keras)</text>
+  <text x="314" y="260" fill="#a8a29e" font-size="12">5 dense layers, softmax over 6</text>
+  <text x="314" y="276" fill="#a8a29e" font-size="12">damage classes, 84.6% test acc.</text>
+  <text x="314" y="334" fill="#fff" font-size="14" font-weight="600">export_model.py</text>
+  <text x="314" y="354" fill="#a8a29e" font-size="12">recovers the StandardScaler,</text>
+  <text x="314" y="370" fill="#7dd3fc" font-size="12">writes burn-model.json (400 KB)</text>
+
+  <!-- runtime: frontend -->
+  <text x="616" y="146" fill="#fff" font-size="15" font-weight="600">React + MapTiler SDK frontend (Vite)</text>
+  <text x="616" y="170" fill="#d6d3d1" font-size="12">map.jsx       perimeters, heatmap, simulated rings</text>
+  <text x="616" y="188" fill="#d6d3d1" font-size="12">TimeSlider    1950-2025 range, play button</text>
+  <text x="616" y="206" fill="#d6d3d1" font-size="12">FormModal     "Will my house burn?"</text>
+  <text x="616" y="224" fill="#d6d3d1" font-size="12">SimulationPanel  weather, wind, spread stages</text>
+  <rect x="616" y="238" width="336" height="36" rx="8" fill="#2a1d18"/>
+  <text x="630" y="261" fill="#ffb347" font-size="13" font-family="Consolas, monospace">lib/api.js: VITE_API_URL set?</text>
+
+  <!-- runtime: browser -->
+  <text x="614" y="358" fill="#a3e635" font-size="14" font-weight="600">no: in the browser</text>
+  <text x="614" y="382" fill="#d6d3d1" font-size="12">simulator.js</text>
+  <text x="614" y="398" fill="#a8a29e" font-size="11">port of the Python</text>
+  <text x="614" y="412" fill="#a8a29e" font-size="11">spread templates</text>
+  <text x="614" y="438" fill="#d6d3d1" font-size="12">burnModel.js</text>
+  <text x="614" y="454" fill="#a8a29e" font-size="11">same network, plain JS</text>
+  <text x="614" y="468" fill="#a8a29e" font-size="11">matrix multiplies</text>
+  <text x="614" y="500" fill="#78716c" font-size="11">what Vercel serves</text>
+
+  <!-- runtime: backend -->
+  <text x="812" y="358" fill="#fda4af" font-size="14" font-weight="600">yes: FastAPI :8119</text>
+  <text x="812" y="382" fill="#d6d3d1" font-size="12">GET /api/simulate</text>
+  <text x="812" y="398" fill="#a8a29e" font-size="11">weather + shapely rings</text>
+  <text x="812" y="424" fill="#d6d3d1" font-size="12">POST /api/calculateBurn</text>
+  <text x="812" y="440" fill="#a8a29e" font-size="11">burn_model.py: h5py +</text>
+  <text x="812" y="454" fill="#a8a29e" font-size="11">NumPy (no TensorFlow)</text>
+  <text x="812" y="480" fill="#d6d3d1" font-size="12">falls back to browser</text>
+  <text x="812" y="496" fill="#a8a29e" font-size="11">if unreachable</text>
+
+  <!-- arrows -->
+  <g fill="none" stroke-width="2" stroke-linecap="round">
+    <path d="M252 155 C 272 155, 280 155, 298 155" stroke="#ffb347" marker-end="url(#a)"/>
+    <path d="M252 249 C 272 249, 280 249, 298 249" stroke="#7dd3fc" marker-end="url(#b)"/>
+    <path d="M425 286 L 425 304" stroke="#7dd3fc" marker-end="url(#b)"/>
+    <path d="M550 155 C 572 155, 580 160, 598 160" stroke="#ffb347" marker-end="url(#a)"/>
+    <path d="M550 343 C 575 343, 590 380, 598 395" stroke="#7dd3fc" marker-end="url(#b)"/>
+    <path d="M550 343 C 650 300, 760 300, 860 328" stroke="#7dd3fc" marker-end="url(#b)"/>
+    <path d="M700 274 L 690 328" stroke="#a3e635" marker-end="url(#a)"/>
+    <path d="M880 274 L 884 328" stroke="#fda4af" marker-end="url(#a)"/>
+    <path d="M252 343 C 280 460, 520 540, 598 520" stroke="#fde68a" stroke-dasharray="5 5" marker-end="url(#a)"/>
+    <path d="M252 343 C 330 560, 760 560, 796 515" stroke="#fde68a" stroke-dasharray="5 5" marker-end="url(#a)"/>
+  </g>
+</svg>
