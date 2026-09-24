@@ -1,5 +1,7 @@
 # FireLine
 
+**Live demo:** https://hacksw.vercel.app
+
 Explore 70 years of California wildfires on a satellite map, start a simulated fire anywhere and watch it spread with live weather, and ask a small neural network how a given house would fare. Built in a day at **HackSW 2025** (February 2025).
 
 ![FireLine demo](docs/media/demo.gif)
